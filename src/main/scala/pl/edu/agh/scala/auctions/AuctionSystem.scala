@@ -1,24 +1,27 @@
 package pl.edu.agh.scala.auctions
 
 import akka.actor.{ActorRef, ActorSystem, Props}
-import pl.edu.agh.scala.auctions.Auction.StartAuction
+import pl.edu.agh.scala.auctions.Seller.FindSomethingToSell
 
 object AuctionSystem extends App {
-  val system = ActorSystem("Allegro")
+  val system = ActorSystem("AuctionSystem")
 
-  val auctionsNum = 10
-  val biddersNum = 3
+  val sellersNum = 5
+  val buyersNum = 10
 
   var i = 0
-  val auctions: List[ActorRef] = for (i <- (1 to auctionsNum).toList) yield {
-    val auction: ActorRef = system.actorOf(Props(new Auction(i)))
-    auction ! StartAuction
-    auction
+
+  system.actorOf(Props[AuctionSearch], AuctionSearch.ACTOR_NAME)
+
+  val sellers: List[ActorRef] = for (i <- (1 to sellersNum).toList) yield {
+    val seller: ActorRef = system.actorOf(Props(new Seller()))
+    seller ! FindSomethingToSell
+    seller
   }
 
-  for (i <- 1 to biddersNum) {
-    val bidder = system.actorOf(Props(new Buyer(i, auctions)))
-    bidder ! Buyer.Init
+  for (i <- 1 to buyersNum) {
+    val buyer = system.actorOf(Props(new Buyer(i)))
+    buyer ! Buyer.Init
   }
 
   system.awaitTermination()
