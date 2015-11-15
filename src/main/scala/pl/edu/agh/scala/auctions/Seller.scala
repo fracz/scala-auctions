@@ -46,8 +46,8 @@ class Seller extends Actor {
       val transmission = if (random.nextBoolean()) "manual" else "automatic"
       val engine = if (random.nextBoolean()) "diesel" else "petrol"
       val vehicleName = vehicle + " " + engine + " " + transmission
-      val auction: ActorRef = context.system.actorOf(Props(new Auction(vehicleName, self)))
-      auction ! StartAuction
+      val auction: ActorRef = context.system.actorOf(Props[Auction])
+      auction ! StartAuction(vehicleName)
       self ! FindSomethingToSell
     case Auction.Sold(productName, price) =>
       wallet += price

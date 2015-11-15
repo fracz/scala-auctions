@@ -1,6 +1,7 @@
 package pl.edu.agh.scala.auctions
 
 import akka.actor.{Cancellable, ActorRef, Actor}
+import akka.persistence.PersistentActor
 import pl.edu.agh.scala.auctions.AuctionSearch.NewAuction
 import scala.concurrent.duration.DurationInt
 
@@ -9,7 +10,7 @@ import scala.util.Random
 
 object Auction {
 
-  case object StartAuction
+  case class StartAuction(productName: String)
 
   case class Bid(price: Double) {
     require(price > 0)
@@ -26,12 +27,16 @@ object Auction {
   case class Sold(productName: String, finalPrice: Double)
 }
 
-class Auction(val productName: String, val seller: ActorRef) extends Actor {
+class Auction extends Actor {
 
   import context._
   import Auction._
 
   private val random = new Random()
+
+  private var productName: String = _
+
+  private var seller: ActorRef = _
 
   private var timerExpiredCancel: Cancellable = _
 
@@ -40,7 +45,9 @@ class Auction(val productName: String, val seller: ActorRef) extends Actor {
   private var winner: ActorRef = _
 
   override def receive: Receive = {
-    case StartAuction =>
+    case StartAuction(name) =>
+      productName = name
+      seller = sender
       context.actorSelection(s"akka://AuctionSystem/user/${AuctionSearch.ACTOR_NAME}") ! new NewAuction(productName)
       enterCreatedState
   }
