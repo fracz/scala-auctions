@@ -3,6 +3,7 @@ package pl.edu.agh.scala.auctions
 import akka.actor.{Cancellable, ActorRef, Actor}
 import akka.persistence.PersistentActor
 import pl.edu.agh.scala.auctions.AuctionSearch.NewAuction
+import pl.edu.agh.scala.auctions.Notifier.Notify
 import scala.concurrent.duration.DurationInt
 
 import scala.util.Random
@@ -68,6 +69,7 @@ class Auction extends Actor {
       winner = bidder
       highestPrice = price
       bidder ! BidAccepted
+      context.actorSelection(s"akka://AuctionSystem/user/${Notifier.ACTOR_NAME}") ! Notify(productName, highestPrice, winner)
     }
     else {
       bidder ! BidRejected
